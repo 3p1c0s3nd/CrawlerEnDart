@@ -1,15 +1,15 @@
-import 'package:crawler/ClassCrawler.dart';
-import 'package:dio/dio.dart';
+import 'package:crawler/class/ClassCrawler.dart';
+import 'package:crawler/class/ClassScanner.dart';
 
-void main() async{
-  final dio = Dio();
-  
+void main() async {
   // Establece la URL de inicio y la profundidad máxima
-  final startUrl = 'https://www.unisangil.edu.co/';
-  final maxDepth = 1;
-  final uri = Uri.parse(startUrl);
-  final dominio = uri.host;
-  //print(dominio);
-  final webCrawler = WebCrawler(dio, maxDepth, dominio);
-  await webCrawler.crawl(startUrl);
+  final startUrl = 'https://www.spectrummedtech.com/products.php';
+  final maxDepth = 5;
+  final dominio = Uri.parse(startUrl).host;
+  final webCrawler = WebCrawler(maxDepth, dominio);
+  final List<String> processedUrls = await webCrawler.crawl(startUrl);
+  //print('\x1B[31mProcessed URLs:\x1B[0m $processedUrls');
+
+  final scanner = ClassScanner(urls: processedUrls);
+  await scanner.scan();
 }

@@ -6,7 +6,9 @@ class ClassFilter {
     final match1 = regex.firstMatch(url1);
     final match2 = regex.firstMatch(url2);
 
-    return match1 != null && match2 != null && match1.group(1) == match2.group(1);
+    return match1 != null &&
+        match2 != null &&
+        match1.group(1) == match2.group(1);
   }
 
   bool shouldProcessUrl(String url) {
