@@ -11,6 +11,7 @@ import '../colors.dart';
 class WebCrawler {
   final int maxDepth;
   final String dominio;
+  final bool checkSubdomain;
   final List<String> processedUrls = [];
   final List<String> extensionFilter = [
     ".img",
@@ -32,7 +33,7 @@ class WebCrawler {
     ".avi"
   ];
 
-  WebCrawler(this.maxDepth, this.dominio);
+  WebCrawler(this.maxDepth, this.dominio, this.checkSubdomain);
 
   Future<List<String>> crawl(String url, {int depth = 0}) async {
     final dio = Dio();
@@ -53,20 +54,45 @@ class WebCrawler {
             final nextUrl = link.attributes['href'];
 
             if (nextUrl != null && nextUrl.isNotEmpty) {
-              if (!verificaUrl(nextUrl)) {
-                final fullUrl = addDomainToRelativePath(url, nextUrl);
-                if (!containsPath(processedUrls, fullUrl.toString())) {
-                  String extension =
-                      path.extension(Uri.parse(fullUrl.toString()).path);
-                  if (!extensionFilter.contains(extension)) {
-                    processedUrls.add(fullUrl.toString());
+              if (checkSubdomain) {
+                if (!verificaUrl(nextUrl)) {
+                  final fullUrl = addDomainToRelativePath(url, nextUrl);
+                  if (!containsPath(processedUrls, fullUrl.toString())) {
+                    String extension =
+                        path.extension(Uri.parse(fullUrl.toString()).path);
+                    if (!extensionFilter.contains(extension)) {
+                      processedUrls.add(fullUrl.toString());
+                    }
+                  }
+                } else {
+                  if (!containsPath(processedUrls, nextUrl.toString())) {
+                    String extension = path.extension(Uri.parse(nextUrl).path);
+                    if (!extensionFilter.contains(extension)) {
+                      processedUrls.add(nextUrl.toString());
+                    }
                   }
                 }
               } else {
-                if (!containsPath(processedUrls, nextUrl.toString())) {
-                  String extension = path.extension(Uri.parse(nextUrl).path);
-                  if (!extensionFilter.contains(extension)) {
-                    processedUrls.add(nextUrl.toString());
+                if (!verificaUrl(nextUrl)) {
+                  final fullUrl = addDomainToRelativePath(url, nextUrl);
+                  if (containsUrl(url, fullUrl.toString())) {
+                    if (!containsPath(processedUrls, fullUrl.toString())) {
+                      String extension =
+                          path.extension(Uri.parse(fullUrl.toString()).path);
+                      if (!extensionFilter.contains(extension)) {
+                        processedUrls.add(fullUrl.toString());
+                      }
+                    }
+                  }
+                } else {
+                  if (containsUrl(url, nextUrl.toString())) {
+                    if (!containsPath(processedUrls, nextUrl.toString())) {
+                      String extension =
+                          path.extension(Uri.parse(nextUrl).path);
+                      if (!extensionFilter.contains(extension)) {
+                        processedUrls.add(nextUrl.toString());
+                      }
+                    }
                   }
                 }
               }
@@ -91,6 +117,13 @@ class WebCrawler {
       Uri uri = Uri.parse(url);
       return uri.path + uri.query == targetUri.path + targetUri.query;
     });
+  }
+
+  bool containsUrl(String url, String targetUrl) {
+    Uri targetUri = Uri.parse(targetUrl);
+
+    Uri uri = Uri.parse(url);
+    return uri.host == targetUri.host;
   }
 
   bool verificaUrl(String url) {
